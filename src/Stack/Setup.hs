@@ -31,6 +31,7 @@ module Stack.Setup
   , downloadStackExe
   ) where
 
+import              Bindings.Uname
 import qualified    Codec.Archive.Tar as Tar
 import              Control.Applicative
 import              Control.Concurrent.Async.Lifted (Concurrently(..))
@@ -77,6 +78,8 @@ import qualified    Data.Yaml as Yaml
 import              Distribution.System (OS (Linux), Arch (..), Platform (..))
 import qualified    Distribution.System as Cabal
 import              Distribution.Text (simpleParse)
+import              Foreign.C
+import              Foreign.Marshal
 import              Lens.Micro (set)
 import              Network.HTTP.Simple (getResponseBody, httpLBS, withResponse, getResponseStatusCode)
 import              Network.HTTP.Download
@@ -600,6 +603,7 @@ getGhcBuild menv = do
                 case libComponents ++ pieComponents of
                     [] -> useBuild CompilerBuildStandard
                     components -> useBuild (CompilerBuildSpecialized (intercalate "-" components))
+            Platform _ OpenBSD -> sysRelease >>= \releaseStr -> useBuild (CompilerBuildSpecialized releaseStr)
             _ -> useBuild CompilerBuildStandard
     useBuild CompilerBuildStandard = do
         $logDebug "Using standard GHC build"
@@ -607,6 +611,11 @@ getGhcBuild menv = do
     useBuild (CompilerBuildSpecialized s) = do
         $logDebug ("Using " <> T.pack s <> " GHC build")
         return (CompilerBuildSpecialized s)
+
+sysRelease :: MonadIO m => m String
+sysRelease = liftIO $ alloca $ \ ptr ->
+           do throwErrnoIfMinus1_ "uname" $ uname ptr
+              peekCString $ release ptr
 
 -- | Ensure Docker container-compatible 'stack' executable is downloaded
 ensureDockerStackExe
