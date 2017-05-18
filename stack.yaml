@@ -16,3 +16,4 @@ flags:
     hide-dependency-versions: true
 extra-deps:
 - store-0.4.1
+- bindings-uname-0.1
