@@ -31,7 +31,7 @@ module Stack.Setup
   , downloadStackExe
   ) where
 
-import              Bindings.Uname
+import              Bindings.Uname (uname, release)
 import qualified    Codec.Archive.Tar as Tar
 import              Control.Applicative
 import              Control.Concurrent.Async.Lifted (Concurrently(..))
@@ -75,11 +75,11 @@ import qualified    Data.Text.Encoding.Error as T
 import              Data.Time.Clock (NominalDiffTime, diffUTCTime, getCurrentTime)
 import              Data.Typeable (Typeable)
 import qualified    Data.Yaml as Yaml
-import              Distribution.System (OS (Linux), Arch (..), Platform (..))
+import              Distribution.System (OS (Linux, OpenBSD), Arch (..), Platform (..))
 import qualified    Distribution.System as Cabal
 import              Distribution.Text (simpleParse)
-import              Foreign.C
-import              Foreign.Marshal
+import              Foreign.C (throwErrnoIfMinus1_, peekCString)
+import              Foreign.Marshal (alloca)
 import              Lens.Micro (set)
 import              Network.HTTP.Simple (getResponseBody, httpLBS, withResponse, getResponseStatusCode)
 import              Network.HTTP.Download
